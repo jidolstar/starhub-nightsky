@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { CameraController } from './CameraController';
 import { CardinalDirectionLayer } from '../layers/CardinalDirectionLayer';
+import { ConstellationBoundaryLayer } from '../layers/ConstellationBoundaryLayer';
 import { ConstellationLayer } from '../layers/ConstellationLayer';
 import { GridLayer } from '../layers/GridLayer';
 import { LandscapeLayer } from '../layers/LandscapeLayer';
@@ -19,6 +20,7 @@ const DEFAULT_LAYER_VISIBILITY: LayerVisibilityOptions = {
   cardinalDirections: true,
   constellationLines: true,
   constellationLabels: true,
+  constellationBoundaries: false,
 };
 
 /**
@@ -35,6 +37,7 @@ export class SkyRenderer {
   private readonly gridLayer: GridLayer;
   private readonly landscapeLayer: LandscapeLayer;
   private readonly cardinalDirectionLayer: CardinalDirectionLayer;
+  private readonly constellationBoundaryLayer: ConstellationBoundaryLayer;
   private readonly constellationLayer: ConstellationLayer;
 
   private observer: ObserverLocation = { lat: 37.5665, lon: 126.978 };
@@ -60,6 +63,7 @@ export class SkyRenderer {
     this.gridLayer = new GridLayer(this.scene);
     this.landscapeLayer = new LandscapeLayer(this.scene);
     this.cardinalDirectionLayer = new CardinalDirectionLayer(canvas);
+    this.constellationBoundaryLayer = new ConstellationBoundaryLayer(this.scene);
     this.constellationLayer = new ConstellationLayer(this.scene, canvas);
 
     this.setLayerVisibility(options.layers ?? {});
@@ -80,6 +84,7 @@ export class SkyRenderer {
       const cameraPitch = Math.asin(cameraDirection.y);
 
       this.starLayer.updateUniforms(this.camera.fov, this.camera.aspect);
+      this.constellationBoundaryLayer.updateUniforms(this.camera.fov, this.camera.aspect);
       this.constellationLayer.updateUniforms(this.camera.fov, this.camera.aspect);
       this.gridLayer.updateUniforms(this.camera.fov, this.camera.aspect);
       this.landscapeLayer.updateUniforms(this.camera.fov, this.camera.aspect, cameraPitch);
@@ -157,6 +162,7 @@ export class SkyRenderer {
     this.gridLayer.toggleGrids(this.layerVisibility.azimuthalGrid, this.layerVisibility.equatorialGrid);
     this.landscapeLayer.setVisibility(this.layerVisibility.landscape);
     this.cardinalDirectionLayer.setVisible(this.layerVisibility.cardinalDirections);
+    this.constellationBoundaryLayer.setVisible(this.layerVisibility.constellationBoundaries);
     this.constellationLayer.setLandscapeVisible(this.layerVisibility.landscape);
     this.constellationLayer.setLinesVisible(this.layerVisibility.constellationLines);
     this.constellationLayer.setLabelsVisible(this.layerVisibility.constellationLabels);
@@ -186,10 +192,15 @@ export class SkyRenderer {
     this.setLayerVisibility({ constellationLabels: visible });
   }
 
+  public setConstellationBoundariesVisible(visible: boolean): void {
+    this.setLayerVisibility({ constellationBoundaries: visible });
+  }
+
   public setConstellationsVisible(visible: boolean): void {
     this.setLayerVisibility({
       constellationLines: visible,
       constellationLabels: visible,
+      constellationBoundaries: visible,
     });
   }
 
@@ -203,6 +214,7 @@ export class SkyRenderer {
     this.starLayer.dispose();
     this.gridLayer.dispose();
     this.landscapeLayer.dispose();
+    this.constellationBoundaryLayer.dispose();
     this.constellationLayer.dispose();
     this.cardinalDirectionLayer.dispose();
     this.renderer.dispose();
@@ -210,6 +222,7 @@ export class SkyRenderer {
 
   private updateCelestialLayers(): void {
     this.starLayer.update(this.observer.lat, this.observer.lon, this.time);
+    this.constellationBoundaryLayer.update(this.observer.lat, this.observer.lon, this.time);
     this.constellationLayer.update(this.observer.lat, this.observer.lon, this.time);
     this.gridLayer.update(this.observer.lat, this.observer.lon, this.time);
   }

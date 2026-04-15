@@ -1,6 +1,7 @@
 # Starhub Night Sky
 
-Three.js와 Vue 3로 만든 별지도 뷰어입니다. 앱은 데모 UI이고, 별지도 렌더링과 천문 계산은 `src/starhub-nightsky` 라이브러리 경계 안에 캡슐화되어 있습니다.
+Starhub Night Sky는 Three.js 기반 밤하늘 라이브러리이자 Vue 데모 앱입니다.  
+`src/starhub-nightsky`는 Vue나 Pinia에 의존하지 않는 코어 라이브러리이고, `src/app`은 그 라이브러리를 보여주는 데모 UI입니다.
 
 ## 실행
 
@@ -21,36 +22,28 @@ npm run build
 npm run preview
 ```
 
-## 주요 기능
+## 포함 기능
 
-- 관측 위치와 시간에 따른 실제 별 위치 렌더링
-- Bright Star Catalog 기반 별 데이터 로딩
-- 밝기별 별 크기와 할로 표현
-- 방위 좌표계/적도 좌표계 그리드 표시
-- 지평선 실루엣 표시
-- 정북/정동/정남/정서 방향 점과 글자 표시
-- 88개 별자리 선 표시
-- 별자리 이름 표시: 한국어 이름과 작은 영어 이름을 함께 표기
-- 마우스 드래그로 시점 이동, 휠로 확대/축소
+- 밝기에 따라 크기와 할로가 달라지는 별 렌더링
+- 방위좌표 격자와 적도좌표 격자 표시
+- 지면 표시 on/off
+- 동서남북 표시 on/off
+- 별자리 선 표시 on/off
+- 별자리 이름 표시 on/off
+- 국제표준 별자리 경계선 on/off
+- 88개 별자리의 한국어 이름과 영문 이름 동시 표기
+- 마우스 드래그로 시점 이동
+- 마우스 휠로 시야각 조절
 
-## 데모 조작
-
-- `FOV (Zoom)`: 시야각 조절
-- `Latitude`: 관측 위도 조절
-- `Show Azimuthal Grid`: 방위 좌표계 그리드 켜기/끄기
-- `Show Equatorial Grid`: 적도 좌표계 그리드 켜기/끄기
-- `Show Landscape`: 지평선 실루엣 켜기/끄기
-- `Show Cardinal Directions`: 동서남북 표시 켜기/끄기
-- `Show Constellation Lines`: 별자리 선 켜기/끄기
-- `Show Constellation Labels`: 별자리 이름 켜기/끄기
-- `+1 Hour`, `+1 Day`, `+1 Month`: 관측 시간 이동
-
-## 라이브러리 사용
-
-외부 앱에서는 대표 클래스인 `StarhubNightsky`만 가져와 사용합니다.
+## 빠른 시작
 
 ```ts
-import { StarhubNightsky } from './starhub-nightsky';
+import { StarhubNightsky } from 'starhub-nightsky';
+
+const canvas = document.querySelector('canvas');
+if (!(canvas instanceof HTMLCanvasElement)) {
+  throw new Error('Canvas element not found');
+}
 
 const nightsky = new StarhubNightsky(canvas, {
   observer: { lat: 37.5665, lon: 126.978 },
@@ -58,8 +51,11 @@ const nightsky = new StarhubNightsky(canvas, {
   fov: 60,
   layers: {
     equatorialGrid: true,
+    landscape: true,
+    cardinalDirections: true,
     constellationLines: true,
     constellationLabels: true,
+    constellationBoundaries: false,
   },
 });
 
@@ -67,45 +63,72 @@ await nightsky.loadDefaultStarCatalog();
 nightsky.start();
 ```
 
-레이어는 개별 API나 `setLayerVisibility`로 제어할 수 있습니다.
+커스텀 CSV를 쓰고 싶다면 직접 불러올 수 있습니다.
 
 ```ts
-nightsky.setConstellationLinesVisible(false);
-nightsky.setConstellationLabelsVisible(true);
-nightsky.setLayerVisibility({
-  cardinalDirections: true,
-  constellationLines: true,
-  constellationLabels: true,
-});
+await nightsky.loadStarCatalogFromUrl('/my-stars.csv');
 ```
 
-## 구조
+별 데이터를 직접 넘길 수도 있습니다.
 
-- `src/starhub-nightsky/StarhubNightsky.ts`: 외부에서 사용하는 대표 클래스
-- `src/starhub-nightsky/engine/SkyRenderer.ts`: Three.js scene, camera, render loop 관리
-- `src/starhub-nightsky/layers/StarLayer.ts`: 별 점, 밝기, 할로 렌더링
-- `src/starhub-nightsky/layers/GridLayer.ts`: 방위/적도 좌표계 그리드 렌더링
-- `src/starhub-nightsky/layers/LandscapeLayer.ts`: 지평선 실루엣 렌더링
-- `src/starhub-nightsky/layers/CardinalDirectionLayer.ts`: 동서남북 방향 점과 글자 표시
-- `src/starhub-nightsky/layers/ConstellationLayer.ts`: 별자리 선과 회전하지 않는 별자리명 표시
-- `src/starhub-nightsky/math/CelestialMath.ts`: 적경/적위를 방위각/고도로 변환
-- `src/starhub-nightsky/catalog/StarCatalog.ts`: Bright Star Catalog CSV 파싱
-- `src/starhub-nightsky/data/Constellations.ts`: 88개 별자리 선과 라벨 좌표 데이터
-- `src/app/`: Vue 데모 앱, Pinia store, UI adapter
+```ts
+nightsky.loadStars(stars);
+```
 
-`src/starhub-nightsky`는 Vue와 Pinia에 의존하지 않습니다. Vue 앱은 `StarhubNightsky` public API를 호출하는 얇은 어댑터 역할만 합니다.
+## 공개 API
 
-## 데이터
+- `start()`, `stop()`, `dispose()`
+- `setObserver()`, `setLocation()`, `setTime()`, `setFov()`
+- `loadDefaultStarCatalog()`
+- `loadStarCatalogFromUrl()`
+- `loadStars()`, `loadMockStars()`
+- `setLayerVisibility()`
+- `setAzimuthalGridVisible()`, `setEquatorialGridVisible()`
+- `setLandscapeVisible()`, `setCardinalDirectionsVisible()`
+- `setConstellationLinesVisible()`, `setConstellationLabelsVisible()`
+- `setConstellationBoundariesVisible()`
+- `setConstellationsVisible()` - 별자리 선, 이름, 경계선을 한 번에 표시합니다.
 
-- 별 데이터는 NASA HEASARC Bright Star Catalog(BSC5P)를 CSV로 변환해 `src/starhub-nightsky/data/bsc5p.csv`로 포함합니다.
-- 별자리 선과 라벨 좌표는 d3-celestial의 GeoJSON 데이터를 내부 포맷으로 변환한 것입니다.
-- 별자리 한국어 이름은 한국천문연구원의 88개 별자리 체계에 맞춘 이름을 사용합니다.
-- d3-celestial 데이터 사용 고지는 `THIRD_PARTY_NOTICES.md`에 정리되어 있습니다.
+## 프로젝트 구조
 
-## 기술 스택
+- `src/starhub-nightsky/`: 라이브러리 코어
+- `src/app/`: Vue 데모와 store
+- `src/starhub-nightsky/data/bsc5p.csv`: 라이브러리에 포함된 기본 별 카탈로그
+- `src/starhub-nightsky/data/ConstellationBoundaries.ts`: IAU 공식 별자리 경계 데이터
+- `public/`: 정적 자산 전용
 
-- Vue 3
-- TypeScript
-- Pinia
-- Three.js
-- astronomy-engine
+## 외부 라이브러리
+
+### 런타임
+
+| 이름 | 용도 | 라이선스 |
+| --- | --- | --- |
+| `three` | Three.js 기반 렌더링 | MIT |
+| `astronomy-engine` | 적경/적위 계산 및 방위각/고도 변환 | MIT |
+| `vue` | 데모 UI | MIT |
+| `pinia` | 데모 상태 관리 | MIT |
+
+### 빌드/개발
+
+| 이름 | 용도 | 라이선스 |
+| --- | --- | --- |
+| `vite` | 개발 서버 및 번들링 | MIT |
+| `@vitejs/plugin-vue` | Vue SFC 플러그인 | MIT |
+| `@vue/tsconfig` | Vue/TypeScript 기본 설정 | MIT |
+| `vue-tsc` | Vue 타입 검사 | MIT |
+| `typescript` | TypeScript 컴파일러 | Apache-2.0 |
+| `@types/node` | Node.js 타입 정의 | MIT |
+| `@types/three` | Three.js 타입 정의 | MIT |
+
+## 외부 자원
+
+| 자원 | 용도 | 비고 |
+| --- | --- | --- |
+| `src/starhub-nightsky/data/bsc5p.csv` | 기본 별 카탈로그 | NASA HEASARC Bright Star Catalog(BSC5P) 기반, 내부 번들 자산 |
+| `src/starhub-nightsky/data/Constellations.ts` | 별자리 선과 라벨 데이터 | d3-celestial GeoJSON 기반, 상세 고지는 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) 참조 |
+| `src/starhub-nightsky/data/ConstellationBoundaries.ts` | IAU 공식 별자리 경계 데이터 | IAU 공식 boundary TXT 기반, 상세 고지는 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) 참조 |
+| 한국천문연구원 천문학습관 | 88개 별자리 한글 표기 기준 | 별자리 이름 정리 기준 자료 |
+
+경계선 원본은 IAU의 [The Constellations](https://www.iau.org/IAU/Iau/Science/What-we-do/The-Constellations.aspx) 페이지와 아카이브 TXT를 기준으로 했습니다.
+
+자세한 외부 자료 고지와 라이선스 원문은 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)에 있습니다.

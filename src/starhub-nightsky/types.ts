@@ -18,6 +18,7 @@ export interface LayerVisibilityOptions {
   cardinalDirections: boolean;
   constellationLines: boolean;
   constellationLabels: boolean;
+  constellationBoundaries: boolean;
 }
 
 export interface StarhubNightskyOptions {

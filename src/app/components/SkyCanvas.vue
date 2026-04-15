@@ -36,6 +36,10 @@
         <input type="checkbox" v-model="skyStore.showConstellationLabels" />
         별자리 이름 표시
       </label>
+      <label class="checkbox-label">
+        <input type="checkbox" v-model="skyStore.showConstellationBoundaries" />
+        별자리 경계선 표시
+      </label>
       <div class="time-controls">
         시간 이동:
         <button @click="fastForward(1)">+1시간</button>
@@ -83,6 +87,7 @@ onMounted(() => {
       cardinalDirections: skyStore.showCardinalDirections,
       constellationLines: skyStore.showConstellationLines,
       constellationLabels: skyStore.showConstellationLabels,
+      constellationBoundaries: skyStore.showConstellationBoundaries,
     },
   });
 
@@ -152,12 +157,18 @@ watch(
 );
 
 watch(
-  () => [skyStore.showConstellationLines, skyStore.showConstellationLabels] as const,
-  ([showConstellationLines, showConstellationLabels]) => {
+  () =>
+    [
+      skyStore.showConstellationLines,
+      skyStore.showConstellationLabels,
+      skyStore.showConstellationBoundaries,
+    ] as const,
+  ([showConstellationLines, showConstellationLabels, showConstellationBoundaries]) => {
     if (nightsky) {
       nightsky.setLayerVisibility({
         constellationLines: showConstellationLines,
         constellationLabels: showConstellationLabels,
+        constellationBoundaries: showConstellationBoundaries,
       });
     }
   }

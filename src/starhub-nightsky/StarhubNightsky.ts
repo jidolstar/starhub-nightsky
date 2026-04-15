@@ -172,6 +172,10 @@ export class StarhubNightsky {
     this.renderer.setConstellationLabelsVisible(visible);
   }
 
+  public setConstellationBoundariesVisible(visible: boolean): void {
+    this.renderer.setConstellationBoundariesVisible(visible);
+  }
+
   public setConstellationsVisible(visible: boolean): void {
     this.renderer.setConstellationsVisible(visible);
   }
