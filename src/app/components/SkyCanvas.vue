@@ -12,7 +12,10 @@
     <!-- Sidebar for Console (Mobile: Bottom Sheet / Desktop: Sidebar) -->
     <div class="controls-sidebar" :class="{ 'is-open': isPanelOpen }">
       <div class="sidebar-header">
-        <h3>Starhub Nightsky</h3>
+        <div class="title-with-version">
+          <h3>Starhub Nightsky</h3>
+          <span class="app-version">v{{ appVersion }}</span>
+        </div>
         <button class="close-btn" @click="isPanelOpen = false">✕</button>
       </div>
 
@@ -97,6 +100,7 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useSkyStore } from '../store/useSkyStore';
 import { StarhubNightsky } from '../../starhub-nightsky';
+import { version as appVersion } from '../../../package.json';
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const skyStore = useSkyStore();
@@ -260,6 +264,19 @@ const fastForward = (hours: number) => {
   font-size: 1.2rem;
   font-weight: 600;
   letter-spacing: -0.02em;
+}
+
+.title-with-version {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.app-version {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 400;
+  font-family: 'Inter', monospace;
 }
 
 .sidebar-content {
