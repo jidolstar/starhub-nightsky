@@ -86,8 +86,8 @@ export class CameraController {
       const currentDistance = this.getPinchDistance();
       if (this.lastPinchDistance !== null && currentDistance > 0) {
         const delta = currentDistance - this.lastPinchDistance;
-        // 줌 감도: 거리 차이에 비례하여 FOV 조절
-        let newFov = this.camera.fov - delta * (this.camera.fov / 500);
+        // 줌 감도 상향: 기존 500에서 250으로 조정하여 더 민감하게 반응하도록 함
+        let newFov = this.camera.fov - delta * (this.camera.fov / 250);
         newFov = Math.max(10, Math.min(185, newFov));
         
         if (Math.abs(newFov - this.camera.fov) > 0.01) {
