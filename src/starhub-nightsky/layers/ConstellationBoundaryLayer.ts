@@ -27,7 +27,7 @@ export class ConstellationBoundaryLayer {
   // 페이드 애니메이션 관련
   private currentOpacity = 0.0;
   private targetOpacity = 0.0;
-  private readonly fadeSpeed = 0.05;
+  private readonly fadeSpeed = 0.03;
 
   constructor(scene: THREE.Scene, boundariesManager: any) {
     this.scene = scene;
@@ -142,12 +142,9 @@ export class ConstellationBoundaryLayer {
     // 데이터 로드 전에는 애니메이션 보류
     if (this.linePoints.length === 0 && this.targetOpacity > 0) return;
 
-    if (Math.abs(this.currentOpacity - this.targetOpacity) > 0.001) {
-      if (this.currentOpacity < this.targetOpacity) {
-        this.currentOpacity = Math.min(this.targetOpacity, this.currentOpacity + this.fadeSpeed);
-      } else {
-        this.currentOpacity = Math.max(this.targetOpacity, this.currentOpacity - this.fadeSpeed);
-      }
+    const diff = this.targetOpacity - this.currentOpacity;
+    if (Math.abs(diff) > 0.001) {
+      this.currentOpacity += Math.sign(diff) * Math.min(Math.abs(diff), this.fadeSpeed);
       this.lineMaterial.uniforms.opacity.value = this.currentOpacity;
 
       if (this.currentOpacity > 0 && !this.lineSegments.visible) {

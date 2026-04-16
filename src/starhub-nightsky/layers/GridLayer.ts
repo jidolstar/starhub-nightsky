@@ -30,7 +30,7 @@ export class GridLayer {
   private azimuthalTargetOpacity = 0.0; 
   private equatorialCurrentOpacity = 0.0;
   private equatorialTargetOpacity = 0.0;
-  private readonly fadeSpeed = 0.04;
+  private readonly fadeSpeed = 0.03;
 
   /**
    * GridManager 인스턴스를 생성하며 두 좌표계의 배경 선들을 초기화합니다.
@@ -115,8 +115,8 @@ export class GridLayer {
    * 즉시 끄는 대신 타겟 투명도를 설정하여 페이드 애니메이션을 유도합니다.
    */
   public toggleGrids(showAzimuthal: boolean, showEquatorial: boolean) {
-    this.azimuthalTargetOpacity = showAzimuthal ? 0.85 : 0.0;
-    this.equatorialTargetOpacity = showEquatorial ? 0.85 : 0.0;
+    this.azimuthalTargetOpacity = showAzimuthal ? 0.7 : 0.0;
+    this.equatorialTargetOpacity = showEquatorial ? 0.7 : 0.0;
 
     // 나타나야 할 때는 즉시 씬 가시성을 켜서 페이드 인이 보이게 함
     if (showAzimuthal) {

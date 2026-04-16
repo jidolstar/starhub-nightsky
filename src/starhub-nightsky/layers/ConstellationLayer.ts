@@ -43,7 +43,7 @@ export class ConstellationLayer {
   // 페이드 애니메이션 관련
   private currentOpacity = 0.0;
   private targetOpacity = 0.0;
-  private readonly fadeSpeed = 0.05;
+  private readonly fadeSpeed = 0.03;
   private readonly labelFadeDurationMs = 500;
 
   // 로딩 상태
@@ -143,7 +143,9 @@ export class ConstellationLayer {
       
       const horizonFade = 1 - this.clamp((viewDirection.z - 0.5) / 0.35, 0, 1);
       const denom = 1 - viewDirection.z;
-      const canProject = horizonFade > 0.01 && denom > 0.03;
+      
+      // 수학적으로 투영이 가능한지 확인 (카메라 뒤쪽 극단적인 경우 제외)
+      const canProject = denom > 0.03;
       
       const ndcX = canProject ? ((viewDirection.x / denom) * fovScale) / camera.aspect : 0;
       const ndcY = canProject ? (viewDirection.y / denom) * fovScale : 0;
@@ -166,8 +168,12 @@ export class ConstellationLayer {
       } else {
         if (label.hiddenSince === null) label.hiddenSince = now;
         const elapsed = now - label.hiddenSince;
-        if (elapsed < this.labelFadeDurationMs && label.hasScreenPosition) {
-          this.showLabel(label, label.lastScreenX, label.lastScreenY, 0);
+        
+        // 사라지는 도중이라도 위치는 실시간으로 따라가야 함
+        if (elapsed < this.labelFadeDurationMs && label.hasScreenPosition && canProject) {
+          this.showLabel(label, screenX, screenY, 0); // 투명도는 CSS transition (0.5s)에 의해 0으로 수렴
+          label.lastScreenX = screenX;
+          label.lastScreenY = screenY;
         } else {
           this.hideLabel(label);
         }

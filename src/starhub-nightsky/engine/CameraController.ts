@@ -5,7 +5,7 @@ export class CameraController {
   private domElement: HTMLElement;
   private onFovChange?: (newFov: number) => void;
 
-  private cameraAzimuth: number = 180; // Start looking South
+  private cameraAzimuth: number = 0; // Start looking North
   private cameraAltitude: number = 0;  // Horizon
   private isDragging: boolean = false;
   private previousMousePosition = { x: 0, y: 0 };

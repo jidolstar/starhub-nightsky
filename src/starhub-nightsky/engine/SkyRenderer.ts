@@ -59,7 +59,7 @@ export class SkyRenderer {
     this.scene.background = new THREE.Color(0x091220);
 
     const aspect = canvas.clientWidth / canvas.clientHeight;
-    this.camera = new THREE.PerspectiveCamera(60, aspect, 0.1, 2000);
+    this.camera = new THREE.PerspectiveCamera(185, aspect, 0.1, 2000);
     this.camera.position.set(0, 0, 0);
 
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });

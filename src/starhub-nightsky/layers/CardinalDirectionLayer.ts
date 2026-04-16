@@ -30,7 +30,7 @@ export class CardinalDirectionLayer {
   private isVisible = true;
   private currentOpacity = 0.0;
   private targetOpacity = 1.0;
-  private readonly fadeSpeed = 0.05;
+  private readonly fadeSpeed = 0.03;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;

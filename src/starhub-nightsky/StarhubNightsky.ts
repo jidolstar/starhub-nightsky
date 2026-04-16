@@ -60,9 +60,10 @@ export class StarhubNightsky {
     );
 
     this.renderer.setObserver(this.observer, this.time);
-    if (typeof options.fov === 'number') {
-      this.renderer.setFov(options.fov);
-    }
+    
+    // 시야각 초기화 (기본값 185도)
+    const initialFov = typeof options.fov === 'number' ? options.fov : 185;
+    this.renderer.setFov(initialFov);
   }
 
   /**

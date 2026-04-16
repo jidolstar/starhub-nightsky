@@ -8,7 +8,7 @@ export const useSkyStore = defineStore('sky', () => {
   
   const currentTime = ref(new Date());
   
-  const fov = ref(60);
+  const fov = ref(185);
   
   const showAzimuthalGrid = ref(false);
   const showEquatorialGrid = ref(true);
