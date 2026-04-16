@@ -14,3 +14,6 @@ trigger: always_on
 # README 업데이트
 - 코드 작성이 끝난 다음에는 README 업데이트를 할 것인지 물어본다. 
 - 임의로 하지 말고 항상 물어보고 업데이트 한다.
+
+# CHANGELOG 업데이트
+- `github-deploy.bat`를 실행하여 배포할 때는 반드시 해당 버전의 주요 변경 사항을 `CHANGELOG.md`에 함께 작성해야 한다.
