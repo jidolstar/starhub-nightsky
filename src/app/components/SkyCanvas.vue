@@ -25,7 +25,7 @@
           <label>
             <div class="label-header">
               <span>시야각(확대)</span>
-              <span class="value">{{ skyStore.fov }}&deg;</span>
+              <span class="value">{{ skyStore.fov.toFixed(2) }}&deg;</span>
             </div>
             <input type="range" min="10" max="185" v-model.number="skyStore.fov" class="wide-range" />
           </label>
@@ -85,6 +85,11 @@
                <button class="plus" @click="fastForward(24 * 30)">+1m</button>
              </div>
           </div>
+        </div>
+
+        <!-- 제작자 서명 -->
+        <div class="sidebar-footer">
+          Created by Ji Yong ho
         </div>
       </div>
     </div>
@@ -285,6 +290,18 @@ const fastForward = (hours: number) => {
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
+  position: relative;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .control-group.top-spacing {

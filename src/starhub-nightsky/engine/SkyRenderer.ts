@@ -11,6 +11,7 @@ import type { LayerVisibilityOptions, ObserverLocation, StarData } from '../type
 interface SkyRendererOptions {
   layers?: Partial<LayerVisibilityOptions>;
   pixelRatio?: number;
+  observer?: ObserverLocation;
 }
 
 const DEFAULT_LAYER_VISIBILITY: LayerVisibilityOptions = {
@@ -73,6 +74,10 @@ export class SkyRenderer {
     this.cardinalDirectionLayer = new CardinalDirectionLayer(canvas);
     this.constellationBoundaryLayer = new ConstellationBoundaryLayer(this.scene, managers.boundaries);
     this.constellationLayer = new ConstellationLayer(this.scene, canvas, managers.catalog, managers.lines);
+
+    // 초기 정렬: 북극성을 바라보도록 설정 (감사합니다!)
+    const initialLat = options.observer?.lat ?? this.observer.lat;
+    this.cameraController.setCameraAngles(0, initialLat);
 
     this.setLayerVisibility(options.layers ?? {});
     window.addEventListener('resize', this.onWindowResize);

@@ -54,6 +54,7 @@ export class StarhubNightsky {
       {
         layers: options.layers,
         pixelRatio: options.pixelRatio,
+        observer: this.observer,
       }
     );
 

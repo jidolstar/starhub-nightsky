@@ -42,6 +42,18 @@ export class CameraController {
     this.camera.updateProjectionMatrix();
   }
 
+  /**
+   * 카메라의 방위각과 고도를 직접 설정합니다.
+   * @param azimuth 방위각 (0: 북, 90: 동, 180: 남, 270: 서)
+   * @param altitude 고도 (-90 ~ 90)
+   */
+  public setCameraAngles(azimuth: number, altitude: number) {
+    this.cameraAzimuth = azimuth % 360;
+    if (this.cameraAzimuth < 0) this.cameraAzimuth += 360;
+    this.cameraAltitude = Math.max(-89.9, Math.min(89.9, altitude));
+    this.updateCameraLook();
+  }
+
   private onWheel = (e: WheelEvent) => {
     e.preventDefault();
     let newFov = this.camera.fov + (e.deltaY > 0 ? 5 : -5);
