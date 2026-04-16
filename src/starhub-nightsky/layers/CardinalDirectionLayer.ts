@@ -27,7 +27,6 @@ export class CardinalDirectionLayer {
   private didSetParentPosition = false;
   
   // 페이드 애니메이션 관련 상태
-  private isVisible = true;
   private currentOpacity = 0.0;
   private targetOpacity = 1.0;
   private readonly fadeSpeed = 0.03;
@@ -52,7 +51,6 @@ export class CardinalDirectionLayer {
    * 방향 표시 레이어의 표시 여부를 변경합니다. (타겟 투명도 설정)
    */
   public setVisible(visible: boolean): void {
-    this.isVisible = visible;
     this.targetOpacity = visible ? 1.0 : 0.0;
     
     // 나타날 때는 즉시 display를 켬

@@ -1,10 +1,8 @@
-import { parseBrightStarCatalogCsv } from './catalog/StarCatalog';
 import { ConstellationCatalog } from './data/ConstellationCatalog';
 import { ConstellationLines } from './data/ConstellationLines';
 import { ConstellationBoundaries } from './data/ConstellationBoundaries';
 import { StarCatalogManager } from './data/StarCatalogManager';
 import { SkyRenderer } from './engine/SkyRenderer';
-import type { ConstellationDefinition } from './data/Constellations';
 import type {
   FovChangeCallback,
   LayerVisibilityOptions,

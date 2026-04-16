@@ -33,7 +33,6 @@ export class ConstellationLayer {
   private parentElement: HTMLElement | null = null;
   
   private labelsVisible = true;
-  private linesVisible = true;
   private landscapeVisible = true;
 
   // 데이터 매니저
@@ -187,7 +186,6 @@ export class ConstellationLayer {
   }
 
   public setLinesVisible(visible: boolean): void {
-    this.linesVisible = visible;
     this.targetOpacity = visible ? 0.8 : 0.0;
     if (visible) this.loadData();
   }

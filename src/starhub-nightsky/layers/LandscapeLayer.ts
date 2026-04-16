@@ -9,6 +9,11 @@ export class LandscapeLayer {
   private mesh: THREE.Mesh | null = null;
   private material: THREE.ShaderMaterial | null = null;
 
+  // 페이드 애니메이션 관련
+  private currentOpacity = 1.0;
+  private targetOpacity = 1.0;
+  private readonly fadeSpeed = 0.03;
+
   /**
    * LandscapeManager 인스턴스를 생성합니다.
    * @param scene 지형 메쉬를 추가할 Three.js Scene 객체
@@ -132,6 +137,31 @@ export class LandscapeLayer {
   }
 
   /**
+   * 매 프레임마다 애니메이션 상태를 갱신합니다.
+   */
+  public update(): void {
+    const diff = this.targetOpacity - this.currentOpacity;
+    if (Math.abs(diff) > 0.001) {
+      this.currentOpacity += Math.sign(diff) * Math.min(Math.abs(diff), this.fadeSpeed);
+      if (this.material) {
+        this.material.uniforms.globalAlpha.value = this.currentOpacity;
+      }
+
+      if (this.currentOpacity > 0 && this.mesh && !this.mesh.visible) {
+        this.mesh.visible = true;
+      }
+    } else {
+      this.currentOpacity = this.targetOpacity;
+      if (this.material) {
+        this.material.uniforms.globalAlpha.value = this.targetOpacity;
+      }
+      if (this.currentOpacity <= 0 && this.mesh) {
+        this.mesh.visible = false;
+      }
+    }
+  }
+
+  /**
    * 매 프레임마다 카메라의 시야각, 화면비율 및 카메라의 고도(Pitch)에 따라 셰이더 파라미터(Uniforms)를 업데이트합니다.
    * @param fov 카메라 시야각(Field of View)
    * @param aspect 화면 가로/세로 비율
@@ -147,11 +177,15 @@ export class LandscapeLayer {
 
   /**
    * 지형 메쉬를 화면에 보이거나 숨기도록 상태를 변경합니다.
+   * 즉시 끄는 대신 타겟 투명도를 조절하여 페이드 효과를 적용합니다.
    * @param visible 표시 여부
    */
   public setVisibility(visible: boolean) {
-    if (this.mesh) {
-      this.mesh.visible = visible;
+    this.targetOpacity = visible ? 1.0 : 0.0;
+    
+    // 켜질 때는 즉시 mesh 가시성을 확보하여 페이드 인이 보이게 함
+    if (visible && this.mesh) {
+      this.mesh.visible = true;
     }
   }
 

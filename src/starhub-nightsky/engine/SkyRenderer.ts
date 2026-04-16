@@ -6,7 +6,6 @@ import { ConstellationLayer } from '../layers/ConstellationLayer';
 import { GridLayer } from '../layers/GridLayer';
 import { LandscapeLayer } from '../layers/LandscapeLayer';
 import { StarLayer } from '../layers/StarLayer';
-import type { ConstellationDefinition } from '../data/Constellations';
 import type { LayerVisibilityOptions, ObserverLocation, StarData } from '../types';
 
 interface SkyRendererOptions {
@@ -97,6 +96,7 @@ export class SkyRenderer {
       const { lat, lon } = this.observer;
       this.starLayer.update(lat, lon, this.time);
       this.gridLayer.update(lat, lon, this.time);
+      this.landscapeLayer.update();
       this.constellationBoundaryLayer.update(lat, lon, this.time);
       this.constellationLayer.update(lat, lon, this.time);
 

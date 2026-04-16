@@ -61,7 +61,7 @@ export class GridLayer {
     }
   }
 
-  private createGridMaterial(colorHex: number, opacity: number, type: 'azimuthal' | 'equatorial'): THREE.ShaderMaterial {
+  private createGridMaterial(colorHex: number, type: 'azimuthal' | 'equatorial'): THREE.ShaderMaterial {
     const color = new THREE.Color(colorHex);
     const mat = new THREE.ShaderMaterial({
       uniforms: {
@@ -205,7 +205,7 @@ export class GridLayer {
   }
 
   private createAzimuthalGrid() {
-    const material = this.createGridMaterial(0xff8c00, 1.0, 'azimuthal'); // 화사한 다크 오렌지
+    const material = this.createGridMaterial(0xff8c00, 'azimuthal'); // 화사한 다크 오렌지
     const r = 990;
     const positions = [];
 
@@ -239,7 +239,7 @@ export class GridLayer {
     this.azimuthalGridLines.renderOrder = 5;
     this.scene.add(this.azimuthalGridLines);
 
-    const horizonMat = this.createGridMaterial(0xffd700, 1.0, 'azimuthal'); // 지평선은 눈에 띄는 순금색
+    const horizonMat = this.createGridMaterial(0xffd700, 'azimuthal'); // 지평선은 눈에 띄는 순금색
     const horizPos = [];
     for (let az = 0; az <= 360; az += 2) {
       const azRad = az * Math.PI / 180;
@@ -254,7 +254,7 @@ export class GridLayer {
 
   private createEquatorialGrid() {
     this.equatorialGridData = [];
-    const material = this.createGridMaterial(0x00bfff, 1.0, 'equatorial'); // 선명한 딥 스카이 블루
+    const material = this.createGridMaterial(0x00bfff, 'equatorial'); // 선명한 딥 스카이 블루
 
     for (let dec = -72; dec <= 72; dec += 18) {
       if (dec === 0) continue;
@@ -277,7 +277,7 @@ export class GridLayer {
     this.equatorialGridLines.renderOrder = 5;
     this.equatorialGroup.add(this.equatorialGridLines);
 
-    const equatorMat = this.createGridMaterial(0x00ffff, 1.0, 'equatorial'); // 적도선은 형광 시안(Neon Cyan)
+    const equatorMat = this.createGridMaterial(0x00ffff, 'equatorial'); // 적도선은 형광 시안(Neon Cyan)
     for (let ra = 0; ra <= 360; ra += 2) this.equatorData.push({ ra: ra, dec: 0 });
     this.equatorGeometry = new THREE.BufferGeometry();
     this.equatorGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(this.equatorData.length * 3), 3));
