@@ -25,7 +25,12 @@ export class CardinalDirectionLayer {
   private readonly dotRadius = 3.5;
   private parentElement: HTMLElement | null = null;
   private didSetParentPosition = false;
-  private visible = true;
+  
+  // 페이드 애니메이션 관련 상태
+  private isVisible = true;
+  private currentOpacity = 0.0;
+  private targetOpacity = 1.0;
+  private readonly fadeSpeed = 0.05;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -44,19 +49,40 @@ export class CardinalDirectionLayer {
   }
 
   /**
-   * 방향 표시 레이어의 표시 여부를 변경합니다.
+   * 방향 표시 레이어의 표시 여부를 변경합니다. (타겟 투명도 설정)
    */
   public setVisible(visible: boolean): void {
-    this.visible = visible;
-    this.overlay.style.display = visible ? 'block' : 'none';
+    this.isVisible = visible;
+    this.targetOpacity = visible ? 1.0 : 0.0;
+    
+    // 나타날 때는 즉시 display를 켬
+    if (visible) {
+      this.overlay.style.display = 'block';
+    }
   }
 
   /**
-   * 카메라 상태에 맞춰 방향 표시의 화면 위치를 갱신합니다.
+   * 카메라 상태에 맞춰 방향 표시의 화면 위치와 투명도를 갱신합니다.
    */
   public update(camera: THREE.PerspectiveCamera): void {
-    if (!this.visible || !this.parentElement) return;
+    if (!this.parentElement) return;
 
+    // 1. 페이드 애니메이션 업데이트
+    const diff = this.targetOpacity - this.currentOpacity;
+    if (Math.abs(diff) > 0.001) {
+      this.currentOpacity += Math.sign(diff) * Math.min(Math.abs(diff), this.fadeSpeed);
+      this.overlay.style.opacity = `${this.currentOpacity}`;
+    } else {
+      this.currentOpacity = this.targetOpacity;
+      this.overlay.style.opacity = `${this.targetOpacity}`;
+      // 완전히 사라지면 렌더 부하 방지를 위해 display: none
+      if (this.currentOpacity <= 0) {
+        this.overlay.style.display = 'none';
+        return; 
+      }
+    }
+
+    // 2. 좌표 투영 업데이트
     const rect = this.overlay.getBoundingClientRect();
     if (
       rect.width <= 0 ||
@@ -69,16 +95,15 @@ export class CardinalDirectionLayer {
     }
 
     camera.updateMatrixWorld(true);
-
     const inverseQuaternion = camera.quaternion.clone().invert();
     const fovScale = 1 / Math.tan(THREE.MathUtils.degToRad(camera.fov) / 4);
     const margin = 40;
 
     for (const key of this.order) {
       const viewDirection = this.directions[key].clone().applyQuaternion(inverseQuaternion).normalize();
-      const fade = 1 - this.clamp((viewDirection.z - 0.55) / 0.35, 0, 1);
+      const horizonFade = 1 - this.clamp((viewDirection.z - 0.55) / 0.35, 0, 1);
 
-      if (fade <= 0.01) {
+      if (horizonFade <= 0.01) {
         this.hideMarker(key);
         continue;
       }
@@ -106,7 +131,7 @@ export class CardinalDirectionLayer {
         continue;
       }
 
-      this.showMarker(key, screenX, screenY, fade);
+      this.showMarker(key, screenX, screenY, horizonFade);
     }
   }
 
@@ -141,6 +166,7 @@ export class CardinalDirectionLayer {
       pointerEvents: 'none',
       zIndex: '11',
       overflow: 'hidden',
+      opacity: '0', // 초기값
     });
   }
 
@@ -191,6 +217,8 @@ export class CardinalDirectionLayer {
     marker.style.display = 'flex';
     marker.style.left = `${x}px`;
     marker.style.top = `${y - this.dotRadius}px`;
+    // marker 자체의 개별 fade와 오버레이 전역 fade를 함께 고려할 수 있으나,
+    // 오버레이 opacity로 처리하므로 여기서는 개별 마커의 horizonFade만 적용
     marker.style.opacity = `${opacity}`;
   }
 

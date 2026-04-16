@@ -1,104 +1,60 @@
-# Starhub Night Sky
+# Starhub Nightsky
 
-Starhub Night Sky는 Three.js 기반 밤하늘 라이브러리이자 Vue 데모 앱입니다.  
-`src/starhub-nightsky`는 Vue나 Pinia에 의존하지 않는 코어 라이브러리이고, `src/app`은 그 라이브러리를 보여주는 데모 UI입니다.
+Starhub Nightsky는 웹 브라우저에서 구동되는 고성능 천체 렌더링 엔진 및 라이브러리입니다. Three.js를 기반으로 하며, 실제 천체 데이터를 바탕으로 별, 별자리, 격자 등을 실시간으로 시뮬레이션하고 렌더링합니다.
 
-## 실행
+## ✨ 주요 특징 (Features)
 
+- **정밀한 천체 시뮬레이션**: 관측지의 위도, 경도 및 실시간 시간에 따른 천체 위치(RA/Dec to Az/Alt)를 정밀하게 계산합니다.
+- **지연 로딩 아키텍처 (Lazy Loading)**: 대용량 별자리 및 경계선 데이터를 각 레이어가 필요할 때 로드하여 초기 구동 속도를 최적화했습니다.
+- **부드러운 시각적 효과**: 모든 레이어(별자리, 격자, 방위 표시 등)에 부드러운 **Fade In/Out 애니메이션**이 적용되어 고급스러운 UX를 제공합니다.
+- **프리미엄 격자 시스템**: 스텔라리움(Stellarium) 스타일의 화사한 색상과 최적화된 셰이더를 사용하여 지평/적도 좌표계를 아름답게 표시합니다.
+- **반응형 오버레이**: WebGL 캔버스 위에 HTML 기반의 별자리 이름 및 방위 표시를 결합하여 가독성과 성능을 동시에 확보했습니다.
+- **스테레오그래픽 투영**: 광시야각에서도 왜곡을 최소화하는 평사 투영(Stereographic Projection)을 지원합니다.
+
+## 🏗️ 아키텍처 (Architecture)
+
+### Core Engine
+- `SkyRenderer`: Three.js 씬(Scene)을 관리하고 모든 레이어의 업데이트 루프를 지휘하는 중앙 엔진입니다.
+- `CelestialMath`: 천체 좌표 변환 및 시간 계산을 담당하는 순수 수학 모듈입니다.
+
+### Data Layer
+- `StarCatalogManager`: 9,000개 이상의 실별 데이터를 관리합니다.
+- `ConstellationCatalog/Lines/Boundaries`: 별자리 관련 정지 데이터를 레이어 요구에 맞춰 제공합니다.
+
+### Layers
+- `StarLayer`: 별의 밝기와 색상을 렌더링합니다.
+- `ConstellationLayer`: 별자리 선과 이름을 페이드 애니메이션과 함께 표시합니다.
+- `GridLayer`: 지평/적도 격자를 셰이더 기반 투명도 제어로 표현합니다.
+- `CardinalDirectionLayer`: 동서남북 방위를 DOM 오버레이로 구현합니다.
+
+## 🚀 시작하기 (Getting Started)
+
+### 설치
 ```bash
-npm install
-npm run dev
+npm install starhub-nightsky
 ```
 
-빌드 확인:
-
-```bash
-npm run build
-```
-
-프로덕션 미리보기:
-
-```bash
-npm run preview
-```
-
-## 주요 기능 및 특징
-
-- **고성능 천체 렌더링**: 밝기에 따라 크기와 할로가 달라지는 별 렌더링
-- **지연 로딩(Lazy Loading)**: 별자리선, 이름, 경계선 데이터를 필요한 시점에만 동적으로 로드하여 초기 번들 크기 최소화
-- **부드러운 전환 효과**: 레이어 켜기/끄기 시 부드러운 페이드 인/아웃 애니메이션 적용
-- **최적화된 라벨링**: 별자리 이름(Labels)의 불필요한 재생성을 방지하여 깜빡임 없는 사용자 경험 제공
-- **IAU 공식 데이터**: 88개 별자리의 한국어/영문 이름, 공식 경계선 및 구성 선 데이터 포함
-- **자유로운 시점 제어**: 마우스 드래그 이동 및 휠 시야각 조절 (FOV 10° ~ 185°)
-
-## 빠른 시작
-
-```ts
+### 기본 사용법
+```typescript
 import { StarhubNightsky } from 'starhub-nightsky';
 
-const canvas = document.querySelector('canvas');
-if (!(canvas instanceof HTMLCanvasElement)) {
-  throw new Error('Canvas element not found');
-}
+const container = document.getElementById('sky-container');
+const nightsky = new StarhubNightsky(container);
 
-const nightsky = new StarhubNightsky(canvas, {
-  observer: { lat: 37.5665, lon: 126.978 },
-  time: new Date(),
-  fov: 60,
-  assetPath: '/assets/data/', // 정적 자산(CSV) 경로 설정
-  layers: {
-    equatorialGrid: true,
-    landscape: true,
-    cardinalDirections: true,
-    constellationLines: true,
-    constellationLabels: true,
-    constellationBoundaries: false,
-  },
-});
+// 지평 격자 켜기
+nightsky.setAzimuthalGridVisible(true);
 
-// 별 데이터를 로드하여 화면에 표시합니다 (Lazy Loading)
-await nightsky.loadDefaultStarCatalog();
-nightsky.start();
+// 관측지 설정 (위도, 경도)
+nightsky.observer.setLocation(37.5665, 126.9780);
 ```
 
-## 설정 옵션 (StarhubNightskyOptions)
+## 🎨 기술적 세부 사항 (Tech Stack)
 
-| 옵션명 | 타입 | 설명 | 기본값 |
-| --- | --- | --- | --- |
-| `observer` | `ObserverLocation` | 관측자의 위도와 경도 | 서울 (37.5, 126.9) |
-| `time` | `Date` | 관측 시간 | 현재 시간 |
-| `fov` | `number` | 초기 카메라 시야각 (Degree) | 60 |
-| `assetPath` | `string` | CSV 데이터 파일이 위치한 베이스 경로 | `/assets/data/` |
-| `layers` | `Partial<LayerVisibilityOptions>` | 초기 레이어 표시 설정 | - |
-| `pixelRatio` | `number` | 렌더러의 픽셀 배율 | `window.devicePixelRatio` |
+- **Rendering**: Three.js (WebGL)
+- **Calculations**: Custom Celestial Math Engine
+- **Data Format**: Optimized Atomized TS Data
+- **Styling**: Vanilla CSS for Overlays
 
-## 공개 API
+## 📄 라이선스 (License)
 
-- `start()`, `stop()`, `dispose()`
-- `setObserver()`, `setLocation()`, `setTime()`, `setFov()`
-- `loadDefaultStarCatalog()` - `assetPath`에서 기본 별 데이터를 로드합니다.
-- `setLayerVisibility()` - 여러 레이어의 표시 상태를 한 번에 갱신합니다. (페이드 효과 적용)
-- `setConstellationLinesVisible()`, `setConstellationLabelsVisible()`
-- `setConstellationBoundariesVisible()`
-- `setConstellationsVisible()` - 별자리 관련 모든 레이어를 한 번에 제어합니다.
-
-## 프로젝트 구조
-
-- `src/starhub-nightsky/`: 라이브러리 코어 (Vanilla JS/TS 기반)
-- `src/app/`: Vue 3 데모 앱 및 상태 관리
-- `public/assets/data/`: 라이브러리 구동에 필요한 정적 데이터 (CSV)
-  - `star-catalog.csv`: 기본 별 데이터 (BSC5)
-  - `constellation-catalog.csv`: 별자리 메타데이터
-  - `constellation-lines.csv`: 별자리 구성 선 데이터
-  - `constellation-boundaries.csv`: IAU 공식 별자리 경계선 데이터
-
-## 외부 라이브러리 및 자원
-
-본 프로젝트는 다음과 같은 데이터와 라이브러리를 활용합니다:
-- **Three.js**: WebGL 기반 3D 렌더링 엔진
-- **Astronomy-Engine**: 정밀한 천체 위치 계산
-- **Bright Star Catalog (BSC5P)**: NASA HEASARC 기반 별 데이터
-- **d3-celestial**: 별자리 구성 데이터의 기초 자료
-- **IAU Constellations**: 공식 별자리 경계 데이터 기준
-
-상세한 라이선스 고지 및 소스는 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)를 참조하십시오.
+이 프로젝트는 MIT 라이선스를 따릅니다.
