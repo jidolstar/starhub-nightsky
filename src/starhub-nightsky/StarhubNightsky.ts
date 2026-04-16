@@ -1,6 +1,10 @@
 import { parseBrightStarCatalogCsv } from './catalog/StarCatalog';
-import { loadBundledStarCatalogCsvText } from './catalog/DefaultStarCatalog';
+import { ConstellationCatalog } from './data/ConstellationCatalog';
+import { ConstellationLines } from './data/ConstellationLines';
+import { ConstellationBoundaries } from './data/ConstellationBoundaries';
+import { StarCatalogManager } from './data/StarCatalogManager';
 import { SkyRenderer } from './engine/SkyRenderer';
+import type { ConstellationDefinition } from './data/Constellations';
 import type {
   FovChangeCallback,
   LayerVisibilityOptions,
@@ -14,6 +18,8 @@ const DEFAULT_OBSERVER: ObserverLocation = {
   lon: 126.978,
 };
 
+const DEFAULT_ASSET_PATH = '/assets/data/';
+
 /**
  * Starhub Night Sky 라이브러리의 대표 클래스입니다.
  * 앱 프레임워크는 이 클래스의 public API만 사용하고, 내부 렌더링 구조에는 의존하지 않습니다.
@@ -24,14 +30,34 @@ export class StarhubNightsky {
   private time: Date;
   private disposed = false;
 
+  // 데이터 도메인 매니저들
+  private readonly starCatalogManager: StarCatalogManager;
+  private readonly catalogManager: ConstellationCatalog;
+  private readonly linesManager: ConstellationLines;
+  private readonly boundariesManager: ConstellationBoundaries;
+
   constructor(canvas: HTMLCanvasElement, options: StarhubNightskyOptions = {}) {
     this.observer = options.observer ? { ...options.observer } : { ...DEFAULT_OBSERVER };
     this.time = options.time ?? new Date();
 
-    this.renderer = new SkyRenderer(canvas, {
-      layers: options.layers,
-      pixelRatio: options.pixelRatio,
-    });
+    const assetPath = options.assetPath ?? DEFAULT_ASSET_PATH;
+    this.starCatalogManager = new StarCatalogManager(assetPath);
+    this.catalogManager = new ConstellationCatalog(assetPath);
+    this.linesManager = new ConstellationLines(assetPath);
+    this.boundariesManager = new ConstellationBoundaries(assetPath);
+
+    this.renderer = new SkyRenderer(
+      canvas,
+      {
+        catalog: this.catalogManager,
+        lines: this.linesManager,
+        boundaries: this.boundariesManager,
+      },
+      {
+        layers: options.layers,
+        pixelRatio: options.pixelRatio,
+      }
+    );
 
     this.renderer.setObserver(this.observer, this.time);
     if (typeof options.fov === 'number') {
@@ -92,7 +118,7 @@ export class StarhubNightsky {
   }
 
   /**
-   * 실제 별 데이터를 별지도에 반영합니다.
+   * 별 데이터를 별지도에 반영합니다.
    */
   public loadStars(stars: StarData[]): void {
     if (this.disposed) return;
@@ -100,45 +126,21 @@ export class StarhubNightsky {
   }
 
   /**
-   * 라이브러리에 포함된 기본 Bright Star Catalog를 불러와 별지도에 반영합니다.
+   * 자산 경로에서 기본 별 카탈로그(BSC5)를 불러와 별지도에 반영합니다.
    */
   public async loadDefaultStarCatalog(): Promise<StarData[]> {
     if (this.disposed) return [];
 
-    const csvText = await loadBundledStarCatalogCsvText();
-    const stars = this.loadStarCatalogFromCsvText(csvText);
-
-    if (!this.disposed) {
-      this.loadStars(stars);
+    try {
+      const stars = await this.starCatalogManager.load();
+      if (!this.disposed) {
+        this.loadStars(stars);
+      }
+      return stars;
+    } catch (error) {
+      console.error('Failed to load star catalog:', error);
+      throw error;
     }
-
-    return stars;
-  }
-
-  /**
-   * CSV URL에서 Bright Star Catalog 데이터를 불러와 별지도에 반영합니다.
-   */
-  public async loadStarCatalogFromUrl(url: string, init?: RequestInit): Promise<StarData[]> {
-    const response = await fetch(url, init);
-    if (!response.ok) {
-      throw new Error(`Star catalog fetch failed: ${response.status}`);
-    }
-
-    const csvText = await response.text();
-    const stars = this.loadStarCatalogFromCsvText(csvText);
-    if (!this.disposed) {
-      this.loadStars(stars);
-    }
-
-    return stars;
-  }
-
-  /**
-   * 개발 확인용 임시 별 데이터를 생성합니다.
-   */
-  public loadMockStars(count = 2000): void {
-    if (this.disposed) return;
-    this.renderer.loadMockStars(count);
   }
 
   /**
@@ -148,20 +150,20 @@ export class StarhubNightsky {
     this.renderer.setLayerVisibility(layers);
   }
 
-  public setAzimuthalGridVisible(visible: boolean): void {
-    this.renderer.setAzimuthalGridVisible(visible);
+  public setAzimuthalGridVisible(boolean: boolean): void {
+    this.renderer.setAzimuthalGridVisible(boolean);
   }
 
-  public setEquatorialGridVisible(visible: boolean): void {
-    this.renderer.setEquatorialGridVisible(visible);
+  public setEquatorialGridVisible(boolean: boolean): void {
+    this.renderer.setEquatorialGridVisible(boolean);
   }
 
-  public setLandscapeVisible(visible: boolean): void {
-    this.renderer.setLandscapeVisible(visible);
+  public setLandscapeVisible(boolean: boolean): void {
+    this.renderer.setLandscapeVisible(boolean);
   }
 
-  public setCardinalDirectionsVisible(visible: boolean): void {
-    this.renderer.setCardinalDirectionsVisible(visible);
+  public setCardinalDirectionsVisible(boolean: boolean): void {
+    this.renderer.setCardinalDirectionsVisible(boolean);
   }
 
   public setConstellationLinesVisible(visible: boolean): void {
@@ -176,24 +178,11 @@ export class StarhubNightsky {
     this.renderer.setConstellationBoundariesVisible(visible);
   }
 
-  public setConstellationsVisible(visible: boolean): void {
-    this.renderer.setConstellationsVisible(visible);
-  }
-
   /**
    * 렌더링 리소스와 이벤트 리스너를 정리합니다.
    */
   public dispose(): void {
     this.disposed = true;
     this.renderer.dispose();
-  }
-
-  private loadStarCatalogFromCsvText(csvText: string): StarData[] {
-    const stars = parseBrightStarCatalogCsv(csvText);
-    if (!stars.length) {
-      throw new Error('Parsed star catalog is empty');
-    }
-
-    return stars;
   }
 }

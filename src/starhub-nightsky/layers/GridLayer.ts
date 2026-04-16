@@ -132,7 +132,12 @@ export class GridLayer {
     // Azimuth lines (Meridians) every 15 degrees
     for (let az = 0; az < 360; az += 15) {
       const azRad = az * Math.PI / 180;
-      for (let alt = -88; alt < 88; alt += 2) {
+      
+      // 주요 방위(0, 90, 180, 270도)만 극점 근처(+/- 88도)까지 연결
+      // 나머지는 80도에서 멈추어 극점 밀집 및 찢어짐 방지
+      const limitAlt = (az % 90 === 0) ? 88 : 80;
+
+      for (let alt = -limitAlt; alt < limitAlt; alt += 2) {
         const altRad1 = alt * Math.PI / 180;
         const altRad2 = (alt + 2) * Math.PI / 180;
 

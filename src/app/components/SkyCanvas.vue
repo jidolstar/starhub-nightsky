@@ -89,9 +89,11 @@ onMounted(() => {
       constellationLabels: skyStore.showConstellationLabels,
       constellationBoundaries: skyStore.showConstellationBoundaries,
     },
+    assetPath: '/assets/data/',
   });
 
   bindNightsky(instance);
+  // instance.loadDefaultConstellations() 호출을 제거하여 지연 로딩(Lazy Loading)이 동작하도록 함
   instance.loadDefaultStarCatalog().catch(() => {
     if (isDestroyed || nightsky !== instance) return;
     instance.loadMockStars(20000);

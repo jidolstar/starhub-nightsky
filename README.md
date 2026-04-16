@@ -22,18 +22,14 @@ npm run build
 npm run preview
 ```
 
-## 포함 기능
+## 주요 기능 및 특징
 
-- 밝기에 따라 크기와 할로가 달라지는 별 렌더링
-- 방위좌표 격자와 적도좌표 격자 표시
-- 지면 표시 on/off
-- 동서남북 표시 on/off
-- 별자리 선 표시 on/off
-- 별자리 이름 표시 on/off
-- 국제표준 별자리 경계선 on/off
-- 88개 별자리의 한국어 이름과 영문 이름 동시 표기
-- 마우스 드래그로 시점 이동
-- 마우스 휠로 시야각 조절
+- **고성능 천체 렌더링**: 밝기에 따라 크기와 할로가 달라지는 별 렌더링
+- **지연 로딩(Lazy Loading)**: 별자리선, 이름, 경계선 데이터를 필요한 시점에만 동적으로 로드하여 초기 번들 크기 최소화
+- **부드러운 전환 효과**: 레이어 켜기/끄기 시 부드러운 페이드 인/아웃 애니메이션 적용
+- **최적화된 라벨링**: 별자리 이름(Labels)의 불필요한 재생성을 방지하여 깜빡임 없는 사용자 경험 제공
+- **IAU 공식 데이터**: 88개 별자리의 한국어/영문 이름, 공식 경계선 및 구성 선 데이터 포함
+- **자유로운 시점 제어**: 마우스 드래그 이동 및 휠 시야각 조절 (FOV 10° ~ 185°)
 
 ## 빠른 시작
 
@@ -49,6 +45,7 @@ const nightsky = new StarhubNightsky(canvas, {
   observer: { lat: 37.5665, lon: 126.978 },
   time: new Date(),
   fov: 60,
+  assetPath: '/assets/data/', // 정적 자산(CSV) 경로 설정
   layers: {
     equatorialGrid: true,
     landscape: true,
@@ -59,76 +56,49 @@ const nightsky = new StarhubNightsky(canvas, {
   },
 });
 
+// 별 데이터를 로드하여 화면에 표시합니다 (Lazy Loading)
 await nightsky.loadDefaultStarCatalog();
 nightsky.start();
 ```
 
-커스텀 CSV를 쓰고 싶다면 직접 불러올 수 있습니다.
+## 설정 옵션 (StarhubNightskyOptions)
 
-```ts
-await nightsky.loadStarCatalogFromUrl('/my-stars.csv');
-```
-
-별 데이터를 직접 넘길 수도 있습니다.
-
-```ts
-nightsky.loadStars(stars);
-```
+| 옵션명 | 타입 | 설명 | 기본값 |
+| --- | --- | --- | --- |
+| `observer` | `ObserverLocation` | 관측자의 위도와 경도 | 서울 (37.5, 126.9) |
+| `time` | `Date` | 관측 시간 | 현재 시간 |
+| `fov` | `number` | 초기 카메라 시야각 (Degree) | 60 |
+| `assetPath` | `string` | CSV 데이터 파일이 위치한 베이스 경로 | `/assets/data/` |
+| `layers` | `Partial<LayerVisibilityOptions>` | 초기 레이어 표시 설정 | - |
+| `pixelRatio` | `number` | 렌더러의 픽셀 배율 | `window.devicePixelRatio` |
 
 ## 공개 API
 
 - `start()`, `stop()`, `dispose()`
 - `setObserver()`, `setLocation()`, `setTime()`, `setFov()`
-- `loadDefaultStarCatalog()`
-- `loadStarCatalogFromUrl()`
-- `loadStars()`, `loadMockStars()`
-- `setLayerVisibility()`
-- `setAzimuthalGridVisible()`, `setEquatorialGridVisible()`
-- `setLandscapeVisible()`, `setCardinalDirectionsVisible()`
+- `loadDefaultStarCatalog()` - `assetPath`에서 기본 별 데이터를 로드합니다.
+- `setLayerVisibility()` - 여러 레이어의 표시 상태를 한 번에 갱신합니다. (페이드 효과 적용)
 - `setConstellationLinesVisible()`, `setConstellationLabelsVisible()`
 - `setConstellationBoundariesVisible()`
-- `setConstellationsVisible()` - 별자리 선, 이름, 경계선을 한 번에 표시합니다.
+- `setConstellationsVisible()` - 별자리 관련 모든 레이어를 한 번에 제어합니다.
 
 ## 프로젝트 구조
 
-- `src/starhub-nightsky/`: 라이브러리 코어
-- `src/app/`: Vue 데모와 store
-- `src/starhub-nightsky/data/bsc5p.csv`: 라이브러리에 포함된 기본 별 카탈로그
-- `src/starhub-nightsky/data/ConstellationBoundaries.ts`: IAU 공식 별자리 경계 데이터
-- `public/`: 정적 자산 전용
+- `src/starhub-nightsky/`: 라이브러리 코어 (Vanilla JS/TS 기반)
+- `src/app/`: Vue 3 데모 앱 및 상태 관리
+- `public/assets/data/`: 라이브러리 구동에 필요한 정적 데이터 (CSV)
+  - `star-catalog.csv`: 기본 별 데이터 (BSC5)
+  - `constellation-catalog.csv`: 별자리 메타데이터
+  - `constellation-lines.csv`: 별자리 구성 선 데이터
+  - `constellation-boundaries.csv`: IAU 공식 별자리 경계선 데이터
 
-## 외부 라이브러리
+## 외부 라이브러리 및 자원
 
-### 런타임
+본 프로젝트는 다음과 같은 데이터와 라이브러리를 활용합니다:
+- **Three.js**: WebGL 기반 3D 렌더링 엔진
+- **Astronomy-Engine**: 정밀한 천체 위치 계산
+- **Bright Star Catalog (BSC5P)**: NASA HEASARC 기반 별 데이터
+- **d3-celestial**: 별자리 구성 데이터의 기초 자료
+- **IAU Constellations**: 공식 별자리 경계 데이터 기준
 
-| 이름 | 용도 | 라이선스 |
-| --- | --- | --- |
-| `three` | Three.js 기반 렌더링 | MIT |
-| `astronomy-engine` | 적경/적위 계산 및 방위각/고도 변환 | MIT |
-| `vue` | 데모 UI | MIT |
-| `pinia` | 데모 상태 관리 | MIT |
-
-### 빌드/개발
-
-| 이름 | 용도 | 라이선스 |
-| --- | --- | --- |
-| `vite` | 개발 서버 및 번들링 | MIT |
-| `@vitejs/plugin-vue` | Vue SFC 플러그인 | MIT |
-| `@vue/tsconfig` | Vue/TypeScript 기본 설정 | MIT |
-| `vue-tsc` | Vue 타입 검사 | MIT |
-| `typescript` | TypeScript 컴파일러 | Apache-2.0 |
-| `@types/node` | Node.js 타입 정의 | MIT |
-| `@types/three` | Three.js 타입 정의 | MIT |
-
-## 외부 자원
-
-| 자원 | 용도 | 비고 |
-| --- | --- | --- |
-| `src/starhub-nightsky/data/bsc5p.csv` | 기본 별 카탈로그 | NASA HEASARC Bright Star Catalog(BSC5P) 기반, 내부 번들 자산 |
-| `src/starhub-nightsky/data/Constellations.ts` | 별자리 선과 라벨 데이터 | d3-celestial GeoJSON 기반, 상세 고지는 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) 참조 |
-| `src/starhub-nightsky/data/ConstellationBoundaries.ts` | IAU 공식 별자리 경계 데이터 | IAU 공식 boundary TXT 기반, 상세 고지는 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md) 참조 |
-| 한국천문연구원 천문학습관 | 88개 별자리 한글 표기 기준 | 별자리 이름 정리 기준 자료 |
-
-경계선 원본은 IAU의 [The Constellations](https://www.iau.org/IAU/Iau/Science/What-we-do/The-Constellations.aspx) 페이지와 아카이브 TXT를 기준으로 했습니다.
-
-자세한 외부 자료 고지와 라이선스 원문은 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)에 있습니다.
+상세한 라이선스 고지 및 소스는 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)를 참조하십시오.
