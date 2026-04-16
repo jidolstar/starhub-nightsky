@@ -1,5 +1,9 @@
 # 🌌 Starhub Nightsky
 
+<p align="center">
+  <img src="starhub-nightsky.png" width="800" alt="Starhub Nightsky Main Viewer">
+</p>
+
 > **고성능 웹 기반 천체 렌더링 엔진 & 인터랙티브 플라네타리움**
 
 Starhub Nightsky는 Three.js를 활용하여 밤하늘의 경이로움을 웹 브라우저와 모바일 환경에서 부드럽게 구현한 오픈소스 천체 엔진입니다. 스텔라리움(Stellarium) 수준의 부드러운 사용자 경험을 지향합니다.
