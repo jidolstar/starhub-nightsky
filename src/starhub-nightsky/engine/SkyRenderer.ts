@@ -122,7 +122,7 @@ export class SkyRenderer {
       this.constellationBoundaryLayer.updateUniforms(this.camera.fov, this.camera.aspect);
       this.constellationLayer.updateUniforms(this.camera.fov, this.camera.aspect);
       this.gridLayer.updateUniforms(this.camera.fov, this.camera.aspect);
-      this.landscapeLayer.updateUniforms(this.camera.fov, this.camera.aspect, cameraPitch);
+      this.landscapeLayer.updateUniforms(this.camera.fov, this.camera.aspect, cameraPitch, this.camera.matrixWorld);
       this.skymapLayer.updateUniforms(this.camera.fov, this.camera.aspect);
 
       // 렌더링

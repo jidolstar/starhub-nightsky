@@ -20,7 +20,7 @@ export class SkymapLayer {
   private readonly fadeSpeed = 0.02;
 
   private invCelestialMatrix = new THREE.Matrix4();
-  private textureArray: THREE.DataTexture2DArray | null = null;
+  private textureArray: THREE.DataArrayTexture | null = null;
 
   constructor(scene: THREE.Scene, assetPath: string) {
     this.scene = scene;
