@@ -20,17 +20,6 @@ export class ConstellationCatalog {
   private catalogPromise: Promise<ConstellationCatalogRow[]> | null = null;
   private rows: ConstellationCatalogRow[] = [];
 
-  private static readonly KOREAN_NAME_OVERRIDES: Record<string, string> = {
-    Cyg: '\uBC31\uC870\uC790\uB9AC',
-    Her: '\uD5E4\uB974\uCEE8\uB808\uC2A4\uC790\uB9AC',
-    Lup: '\uC774\uB9AC\uC790\uB9AC',
-    Vul: '\uC791\uC740\uC5EC\uC6B0\uC790\uB9AC',
-  };
-
-  private static readonly ENGLISH_NAME_OVERRIDES: Record<string, string> = {
-    CrA: 'Corona Australis',
-  };
-
   constructor(assetPath: string) {
     this.assetPath = assetPath.endsWith('/') ? assetPath : `${assetPath}/`;
   }
@@ -76,11 +65,10 @@ export class ConstellationCatalog {
     lineDataMap?: Map<string, [number, number][][]>
   ): ConstellationDefinition[] {
     return rows.map((row) => {
-      const { englishName, koreanName } = this.normalizeDisplayNames(row.abbr, row.nameEn, row.nameKo);
       return {
         id: row.abbr,
-        englishName,
-        koreanName,
+        englishName: row.nameEn,
+        koreanName: row.nameKo,
         label: [row.raDeg, row.decDeg],
         lines: lineDataMap?.get(row.abbr) || [],
       };
@@ -155,14 +143,4 @@ export class ConstellationCatalog {
     return Number.isFinite(parsed) ? parsed : Number.NaN;
   }
 
-  private normalizeDisplayNames(
-    abbr: string,
-    englishName: string,
-    koreanName: string
-  ): { englishName: string; koreanName: string } {
-    return {
-      englishName: ConstellationCatalog.ENGLISH_NAME_OVERRIDES[abbr] ?? englishName,
-      koreanName: ConstellationCatalog.KOREAN_NAME_OVERRIDES[abbr] ?? koreanName,
-    };
-  }
 }
