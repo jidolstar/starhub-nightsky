@@ -17,6 +17,7 @@ export const useSkyStore = defineStore('sky', () => {
   const showConstellationLines = ref(true);
   const showConstellationLabels = ref(true);
   const showConstellationBoundaries = ref(false);
+  const showSkymap = ref(true);
   
 
   const updateTime = (date: Date) => {
@@ -46,6 +47,7 @@ export const useSkyStore = defineStore('sky', () => {
     showConstellationLines,
     showConstellationLabels,
     showConstellationBoundaries,
+    showSkymap,
     updateTime,
     updateLocation,
     updateFov

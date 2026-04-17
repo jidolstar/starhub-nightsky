@@ -16,7 +16,7 @@ const DEFAULT_OBSERVER: ObserverLocation = {
   lon: 126.978,
 };
 
-const DEFAULT_ASSET_PATH = '/assets/data/';
+const DEFAULT_ASSET_PATH = 'https://nightsky-cdn.starhub.im/';
 
 /**
  * Starhub Night Sky 라이브러리의 대표 클래스입니다.
@@ -55,6 +55,7 @@ export class StarhubNightsky {
         layers: options.layers,
         pixelRatio: options.pixelRatio,
         observer: this.observer,
+        assetPath: assetPath,
       }
     );
 
@@ -176,6 +177,10 @@ export class StarhubNightsky {
 
   public setConstellationBoundariesVisible(visible: boolean): void {
     this.renderer.setConstellationBoundariesVisible(visible);
+  }
+
+  public setSkymapVisible(visible: boolean): void {
+    this.renderer.setLayerVisibility({ skymap: visible });
   }
 
   /**

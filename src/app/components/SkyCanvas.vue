@@ -67,6 +67,14 @@
             <input type="checkbox" v-model="skyStore.showConstellationLabels" />
             <span>명칭</span>
           </label>
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="skyStore.showConstellationBoundaries" />
+            <span>경계선</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="skyStore.showSkymap" />
+            <span>성도 배경</span>
+          </label>
         </div>
 
         <div class="time-controls">
@@ -136,8 +144,9 @@ onMounted(() => {
       constellationLines: skyStore.showConstellationLines,
       constellationLabels: skyStore.showConstellationLabels,
       constellationBoundaries: skyStore.showConstellationBoundaries,
+      skymap: skyStore.showSkymap,
     },
-    assetPath: `${import.meta.env.BASE_URL}assets/data/`,
+    assetPath: 'https://nightsky-cdn.starhub.im/',
   });
 
   bindNightsky(instance);
@@ -201,6 +210,15 @@ watch(
   (showCardinalDirections) => {
     if (nightsky) {
       nightsky.setCardinalDirectionsVisible(showCardinalDirections);
+    }
+  }
+);
+
+watch(
+  () => skyStore.showSkymap,
+  (show) => {
+    if (nightsky) {
+      nightsky.setSkymapVisible(show);
     }
   }
 );

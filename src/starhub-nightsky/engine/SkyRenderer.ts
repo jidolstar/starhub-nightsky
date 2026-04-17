@@ -5,6 +5,7 @@ import { ConstellationBoundaryLayer } from '../layers/ConstellationBoundaryLayer
 import { ConstellationLayer } from '../layers/ConstellationLayer';
 import { GridLayer } from '../layers/GridLayer';
 import { LandscapeLayer } from '../layers/LandscapeLayer';
+import { SkymapLayer } from '../layers/SkymapLayer';
 import { StarLayer } from '../layers/StarLayer';
 import type { LayerVisibilityOptions, ObserverLocation, StarData } from '../types';
 
@@ -12,6 +13,7 @@ interface SkyRendererOptions {
   layers?: Partial<LayerVisibilityOptions>;
   pixelRatio?: number;
   observer?: ObserverLocation;
+  assetPath?: string;
 }
 
 const DEFAULT_LAYER_VISIBILITY: LayerVisibilityOptions = {
@@ -22,6 +24,7 @@ const DEFAULT_LAYER_VISIBILITY: LayerVisibilityOptions = {
   constellationLines: true,
   constellationLabels: true,
   constellationBoundaries: false,
+  skymap: true,
 };
 
 /**
@@ -40,6 +43,7 @@ export class SkyRenderer {
   private readonly cardinalDirectionLayer: CardinalDirectionLayer;
   private readonly constellationBoundaryLayer: ConstellationBoundaryLayer;
   private readonly constellationLayer: ConstellationLayer;
+  private readonly skymapLayer: SkymapLayer;
 
   private observer: ObserverLocation = { lat: 37.5665, lon: 126.978 };
   private time = new Date();
@@ -56,15 +60,19 @@ export class SkyRenderer {
     options: SkyRendererOptions = {}
   ) {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x091220);
+    // 투명 배경을 위해 배경색 설정을 제거하거나 투명하게 설정
+    this.scene.background = null; 
 
     const aspect = canvas.clientWidth / canvas.clientHeight;
     this.camera = new THREE.PerspectiveCamera(185, aspect, 0.1, 2000);
     this.camera.position.set(0, 0, 0);
 
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    // updateStyle=false: canvas의 style.width/height를 고정 픽셀로 덮어쓰지 않음
+    // → CSS의 width:100%; height:100%가 유지되어 창 축소 시에도 올바르게 반응함
+    this.renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
     this.renderer.setPixelRatio(options.pixelRatio ?? window.devicePixelRatio);
+    this.renderer.setClearColor(0x000000, 0); // 완전 투명 배경
     this.renderer.domElement.style.touchAction = 'none';
 
     this.cameraController = new CameraController(this.camera, this.renderer.domElement);
@@ -74,6 +82,10 @@ export class SkyRenderer {
     this.cardinalDirectionLayer = new CardinalDirectionLayer(canvas);
     this.constellationBoundaryLayer = new ConstellationBoundaryLayer(this.scene, managers.boundaries);
     this.constellationLayer = new ConstellationLayer(this.scene, canvas, managers.catalog, managers.lines);
+    
+    // assetPath에서 'data/'를 제거하여 베이스 에셋 경로 획득
+    const baseAssetPath = (options.assetPath || '').replace(/data\/$/, '');
+    this.skymapLayer = new SkymapLayer(this.scene, baseAssetPath);
 
     // 초기 정렬: 북극성을 바라보도록 설정 (감사합니다!)
     const initialLat = options.observer?.lat ?? this.observer.lat;
@@ -104,12 +116,14 @@ export class SkyRenderer {
       this.landscapeLayer.update();
       this.constellationBoundaryLayer.update(lat, lon, this.time);
       this.constellationLayer.update(lat, lon, this.time);
+      this.skymapLayer.update(lat, lon, this.time, this.camera);
 
       this.starLayer.updateUniforms(this.camera.fov, this.camera.aspect);
       this.constellationBoundaryLayer.updateUniforms(this.camera.fov, this.camera.aspect);
       this.constellationLayer.updateUniforms(this.camera.fov, this.camera.aspect);
       this.gridLayer.updateUniforms(this.camera.fov, this.camera.aspect);
       this.landscapeLayer.updateUniforms(this.camera.fov, this.camera.aspect, cameraPitch);
+      this.skymapLayer.updateUniforms(this.camera.fov, this.camera.aspect);
 
       // 렌더링
       this.renderer.render(this.scene, this.camera);
@@ -165,6 +179,7 @@ export class SkyRenderer {
     this.constellationLayer.setLandscapeVisible(this.layerVisibility.landscape);
     this.constellationLayer.setLinesVisible(this.layerVisibility.constellationLines);
     this.constellationLayer.setLabelsVisible(this.layerVisibility.constellationLabels);
+    this.skymapLayer.setVisibility(this.layerVisibility.skymap);
   }
 
   public setAzimuthalGridVisible(visible: boolean): void {
@@ -215,17 +230,20 @@ export class SkyRenderer {
     this.landscapeLayer.dispose();
     this.constellationBoundaryLayer.dispose();
     this.constellationLayer.dispose();
+    this.skymapLayer.dispose();
     this.cardinalDirectionLayer.dispose();
     this.renderer.dispose();
   }
 
   private onWindowResize = (): void => {
     const canvas = this.renderer.domElement;
-    const parent = canvas.parentElement;
-    if (!parent) return;
+    // style을 고정하지 않으므로 canvas.clientWidth/Height가 CSS 레이아웃 크기를 반영함
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    if (width === 0 || height === 0) return;
 
-    this.camera.aspect = parent.clientWidth / parent.clientHeight;
+    this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(parent.clientWidth, parent.clientHeight);
+    this.renderer.setSize(width, height, false);
   };
 }

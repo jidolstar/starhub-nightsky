@@ -1,4 +1,4 @@
-import { Horizon, Observer } from 'astronomy-engine';
+import { Horizon, Observer, Rotation_EQJ_EQD, RotateVector, Vector, AstroTime } from 'astronomy-engine';
 
 /**
  * 적경/적위 좌표를 방위각/고도 좌표로 변환합니다.
@@ -25,4 +25,42 @@ export function calculateAzAlt(ra: number, dec: number, lat: number, lon: number
     az: hz.azimuth,
     alt: hz.altitude
   };
+}
+
+/**
+ * J2000.0 좌표를 관측 시점(JNow, Equator of date)의 적도 좌표로 변환합니다.
+ * 배경 이미지(J2000)와 현재 별(JNow) 사이의 세차(Precession) 차이를 보정할 때 사용합니다.
+ * 
+ * @param ra 적경 (J2000, 단위: 도)
+ * @param dec 적위 (J2000, 단위: 도)
+ * @param date 관측 일시
+ * @returns { ra, dec } (JNow, 단위: 도)
+ */
+export function j2000ToJNow(ra: number, dec: number, date: Date): { ra: number; dec: number } {
+  const time = new AstroTime(date);
+  
+  // J2000 (EQJ) -> 관측 시점 (EQD, JNow)의 세차/장동 행렬 가져오기
+  const matrix = Rotation_EQJ_EQD(time);
+  
+  // 1. RA/Dec(J2000)를 단위 벡터로 변환 (Cartesian)
+  const raRad = ra * Math.PI / 180;
+  const decRad = dec * Math.PI / 180;
+  const cosDec = Math.cos(decRad);
+  
+  const v = new Vector(
+    cosDec * Math.cos(raRad),
+    cosDec * Math.sin(raRad),
+    Math.sin(decRad),
+    time
+  );
+
+  // 2. 세차 행렬 적용 (Rotation)
+  const rotated = RotateVector(matrix, v);
+
+  // 3. 다시 RA/Dec(JNow)로 변환
+  let outRa = Math.atan2(rotated.y, rotated.x) * 180 / Math.PI;
+  if (outRa < 0) outRa += 360;
+  const outDec = Math.asin(Math.max(-1, Math.min(1, rotated.z))) * 180 / Math.PI;
+
+  return { ra: outRa, dec: outDec };
 }
