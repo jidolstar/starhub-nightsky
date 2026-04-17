@@ -22,6 +22,7 @@
 작업이 스킬의 `description`과 매칭되면 편집 전에 해당 `SKILL.md`를 로드한다.
 
 - [threejs-render-order](.agents/skills/threejs-render-order/SKILL.md) — Three.js 투명 객체 렌더링 순서 충돌(깜빡임, 갑자기 밝아짐) 해결
+- [fullscreen-quad-layer](.agents/skills/fullscreen-quad-layer/SKILL.md) — wide 화면에서 SphereGeometry 레이어가 원형으로 잘리는 문제 → 풀스크린 쿼드 + 역-스테레오그래픽으로 전환
 
 새 스킬을 작성할 때는 [.agents/rules/skills.md](.agents/rules/skills.md) 규칙을 따른다.
 
@@ -102,9 +103,31 @@ vec2 proj   = vec2(dir.x, dir.y) / (1.0 - dir.z) * scale;
 gl_Position = vec4(proj.x / aspect, proj.y, -dir.z * 0.001, 1.0);
 ```
 
-참조 구현: [LandscapeLayer.ts](src/starhub-nightsky/layers/LandscapeLayer.ts), [GridLayer.ts](src/starhub-nightsky/layers/GridLayer.ts), [ConstellationLayer.ts](src/starhub-nightsky/layers/ConstellationLayer.ts).
+참조 구현: [GridLayer.ts](src/starhub-nightsky/layers/GridLayer.ts), [ConstellationLayer.ts](src/starhub-nightsky/layers/ConstellationLayer.ts).
 
 **결과**: 새 레이어 추가 시 `MeshBasicMaterial` 같은 기본 머티리얼은 동작하지 않는다. 반드시 `ShaderMaterial`로 위 패턴을 복제해야 한다. `fov`, `aspect`는 uniform으로 받아 `updateUniforms`에서 매 프레임 갱신.
+
+### 풀스크린 쿼드 레이어 패턴 (wide 화면 대응)
+
+전체 화면을 균일하게 채워야 하는 레이어(지형, 대기, 배경 등)는 `SphereGeometry` 대신 **풀스크린 쿼드 + 역-스테레오그래픽** 방식을 사용한다. `SphereGeometry`는 스테레오그래픽 투영에서 지평선(대원)이 원으로 투영되어 wide 화면 좌우에 구멍이 생긴다.
+
+```glsl
+// 버텍스: NDC 그대로 출력
+gl_Position = vec4(position.xy, 1.0, 1.0);
+
+// 프래그먼트: 역-스테레오그래픽으로 worldDir 계산
+vec2 proj = (vUv - 0.5) * 2.0;
+float scale = 1.0 / tan(radians(fov) / 4.0);
+vec2 p = vec2(proj.x * aspect, proj.y) / scale;
+float L2 = dot(p, p);
+float z = (L2 - 1.0) / (L2 + 1.0);
+vec3 viewDir = vec3((1.0 - z) * p.x, (1.0 - z) * p.y, z);
+vec3 worldDir = normalize((cameraWorldMatrix * vec4(viewDir, 0.0)).xyz);
+```
+
+`cameraWorldMatrix` uniform을 매 프레임 `camera.matrixWorld`로 갱신한다.
+참조 구현: [LandscapeLayer.ts](src/starhub-nightsky/layers/LandscapeLayer.ts), [SkymapLayer.ts](src/starhub-nightsky/layers/SkymapLayer.ts).
+스킬 문서: [fullscreen-quad-layer](.agents/skills/fullscreen-quad-layer/SKILL.md)
 
 ### 좌표 변환 관례
 
@@ -180,4 +203,4 @@ python tools/generate-tiles-fits.py
 
 ## 진행 중 이슈 (2026-04-17 시점)
 
-- [SkymapLayer.ts](src/starhub-nightsky/layers/SkymapLayer.ts)가 **풀스크린 쿼드 + 역-스테레오그래픽 접근**으로 설계되어 있으나 185도 FOV 투영 모델과 맞지 않아 배경이 렌더되지 않는 상태. 인사이드-페이싱 `SphereGeometry` + 표준 UV 기반 샘플링으로 재작성 필요. 관련 플랜: [_plan/20260416-001-skymap-dual-mesh-fix.md](_plan/20260416-001-skymap-dual-mesh-fix.md).
+현재 알려진 미해결 이슈 없음.
